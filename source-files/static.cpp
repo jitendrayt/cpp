@@ -38,7 +38,7 @@ public :
 // same memory location ie sharing the memory location across all the runs of the function.
 
 void staticFunction() {
-    static int s_FunctionRunCount;
+    static int s_FunctionRunCount; // this will execute only once.
     s_FunctionRunCount++;
     cout<<s_FunctionRunCount<<endl;
 }

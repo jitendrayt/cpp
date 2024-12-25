@@ -1,7 +1,11 @@
 #include<iostream> // use <> angular brackets when the direcory of the file is added to include paths.
 // c++ std library header files do not have .h extensio, but on the other hand c header files does ex <stdio.h>
 #include<string>
+#include<memory>
+#include<vector>
+#include<tuple>
 #include "../header-files/revise.h" // user "" quotes anytime else, for relative file location to current file.
+
 
 using namespace std;
 
@@ -105,7 +109,7 @@ class Player {
 struct PlayerStruct {
     int x, y;
     int speed;
-};
+} struct_variable; // this way a variable "struct_variable" will also be declared along witht the struct type
 
 // LOG Class
 
@@ -143,6 +147,15 @@ public :
 int s_staticVariable = 5;
 // static function of same name in static .cpp
 void s_Function() {}
+
+// A variable declared static inside a function also lives till the program is terminated.
+// however it can only be accessed inside that function only and can't be accessed from outside the function.
+// The static variable inside a function is shared for all function runs.
+void function_f() {
+    static int  function_f_calls= 0; // this will execute only once.
+    function_f_calls++;
+    cout <<" function_f is called "<< function_f_calls << " times"<<endl;
+}
 
 // static variable inside a class.
 // static variable inside a class is shared by all the objects of that class it's not specific to any object.
@@ -414,24 +427,550 @@ void stringLiteral() {
     
     //char* newStr = "Hello" + "World"; // it's not allowed as both are const char *.
     // however with string literal, below can be done.
-    string newStr = "Hello"s + "World";
+    string newStr = "Hello"s + "World"; // '""s' is an operator in string literal which returns a string from 
+    //  string literal.
     
+    // String literals are stored in a constant part of data in the binary itself.
+    // String literals can not be modified therefore it's always a good idea to mark them const char*
+    const char* literalStr = "Hello world";
+    // char* literalStr = "Hello World";
+    // literalStr[0] = 'J';  // this will not work and result in errors.
 
-    //a raw string literal is a string in which the escape characters like ‘ \n, \t, or \” ‘ of C++ are 
+    char literalStrArr[12] = "Hello World";
+    literalStrArr[0] = 'J';// allowed! but the actual string stored in read only data segment does not change 
+    // instead a copy is made in literalStrArr and that's modified
+
+
+    // Raw strings
+    // a raw string literal is a string in which the escape characters like ‘ \n, \t, or \” ‘ of C++ are 
     // not processed. Hence, a raw string literal that starts with R”( and ends in )”.
-    //It ignores all the special characters like \n and \t and treats them like normal text.
-    
-    
+    // It ignores all the special characters like \n and \t and treats them like normal text.
+    const char* rawString = R"(Hello \n \0 World)"; // R"()" operator enables using literal meaning of 
+    // escape characters basically you can write text inside it without worrying about any special escape
+    // charater like \n \t \0 etc.
+    cout<<"Raw string  - "<< rawString<<endl;
 }
+
+
+// const in c++
+// const is a promise that we will not change the value, this is better for readibility, shows purpose 
+// and also enforeces the idea of not changing a varible for any reasons.
+void constInCpp() {
+    const int maxValue = 99; 
+
+    int * intVal = new int(5);
+    *intVal = 10; // changing the content pointer by the pointer.
+
+    cout << " Int value : " << *intVal << endl;
+
+    int* intVal2 = new int(15);
+
+    cout << " Int value2 : " << *intVal2 << endl;
+
+    intVal = intVal2; // changing the memory address pointed by the pointer
+
+    const int* intVal3 = new int(20); // Making the value pointed by the pointer a const. POINTER TO A CONST INT
+    int* const intVal4 = new int(25); // Making the pointer itself const. CONST POINTER TO AN INT
+    intVal3 = intVal4;
+    // *intVal3 = 30;  // does not work since the pointer is to a const int.
+    // intVal4 = intVal3; // does not work since it's a constant pointer to int.
+    *intVal4 = 30;
+    const int* const intVal5 = new int(50); // CONSTANT POINTER TO A CONSTANT INT, no modification will work.
+}
+// const in classes 
+class ConstInClass {
+public :
+    int m_age;
+    mutable int m_houseNo; // mutable keyword in c++ 
+    int getAge() const { // const in a function declaration/definition after parenthesis means the method must not modify any class members
+        // age+=5; // this will not work since method is marked with const.
+        return m_age;
+    }
+    int getHouseNo() const {
+        m_houseNo += 1; // even though the method is marked as const the m_houseNo can be modified since it is declared as mutable.
+        return m_houseNo; // mutable variables can be modified in functions which guarentee constness.
+    }
+    
+};
+// ** a const object of a class can only access methods which are declared as const, it can't call the methoda which do not guarantee constness.
+// therefore always mark methods which are not modifying any value as const.
+
+
+// initializer list in c++
+// Initilzer lists are used to initilize class memebers before constructor body gets executed.
+// non static const members needs to be initialized in he initiliizer list only not in the constructor body
+// if members are not initilized in the initializer list then anyway these variables are created with their default constructor
+// and then in the constructor body they are assigned with "=" operator to the actual objects. (PERFORMANCE REASON)
+// *** The parameterized constructor of a base class can only be called from the initializer lists before entering constructor body.
+class InitHelper{
+    int m_x;
+    int m_y;
+public:
+    InitHelper(int x, int y) : m_x(x), m_y(y) {
+        cout<<" Creating InitHelper" <<endl;
+    }
+};
+
+class InitList{
+public :
+    const int m_x;
+    InitHelper m_ih;
+    int & m_xRef;
+    // all the variables are initilized with their default values before going into the compiler body
+    // and then late.
+    InitList(int x, InitHelper& ih) : m_x (x), m_ih(ih) , m_xRef(x) {
+        // int m_x = x; // const members needs to be initialized int he initiliizer list only not in the constructor body.
+        // m_ih = ih; // since InitHelper does not have a default constructor then it must be initialized in the initilizer list.
+        // reference members also needs to be initilized in the initializer lists.
+    }
+};
+
+
+// New keyword in c++
+// The "new" keyword (operator) is used to allocate memory for the supplied type on the heap.
+// The memory allocated by new keyword must be freed by calling "delete" object name.
+// new returns a pointer to the object after creating it on the heap.
+// The lifetime of objects allocated by new keywords is the lifetime of the program unless explicitly freed by calling delete.
+// Allocating memory on heap by using new takes more time then allocating on stack.
+// usually calling new calls underlying c malloc(sizeof(class type))
+// If new is used with arrays like new int[10] then delete also needs to be called in a similar manner "delete []"
+void newInCpp() {
+    int * intA = new int();
+    int * arrayInt = new int[10];
+
+    delete intA;
+    delete [] arrayInt;
+}
+
+// implicit and explicit conversions in c++
+
+// explicit keyword in c++
+// explicit keyword in front of a constructor disables the ability of the class object to implicitly convert the type mentioned in the
+// single argumented constructor to the class type.
+
+class Conversions {
+public : 
+    explicit Conversions(int id) : m_id (id) {}
+    Conversions(string username) : m_username(username) {}
+private:
+    int m_id;
+    string m_username;
+};
+
+void conversionsInCpp() {
+    // Conversions c1 = 10; // code does not work since the constructor which takes int as argument is marked explicit and needs to 
+    // be called explicitly.
+    Conversions c2 = string("jraghuwa"); // implicit conversion from string to Conversions since there exist a constructor in conversions
+    // which takes string as an argument.
+}
+
+// Operator overloading in c++
+// Operators can be overloaded just like normal functions. 
+
+class OperatorOverloading{ 
+public :
+    OperatorOverloading( int x, int y) : m_x(x), m_y(y) {}
+    void print() {
+        cout<<" X : " << m_x << "Y : "<< m_y<<endl;
+    }
+    OperatorOverloading add (const OperatorOverloading& other) { // this can direclty be done in operator += however this is more readable.
+        this->m_x += other.m_x;
+        this->m_y += other.m_y;
+        return *this;
+    }
+    OperatorOverloading operator += (const OperatorOverloading& other) { // the "+=" operator is being overloaded to add x and y variables.
+        return add(other); // operators are like methods only just the actual operator is preceeded by "operator" in the signature.
+    }
+    friend ostream& operator<< (ostream& cout, OperatorOverloading& ool); // declaring friend so that it can access private members.
+private :
+    int m_x;
+    int m_y;
+
+};
+
+// overloading the "<<" operator to support OperatorOverloading class
+// doing it outside because it's not part of OperatorOverloading class but instead it's part of 
+// ostream class.
+ostream& operator<< (ostream& cout_, OperatorOverloading& ool) {
+    cout_ << "X value : " << ool.m_x << " Y value : " << ool.m_y;
+    return cout_;
+}
+
+void operatorOverloadingInCpp() {
+    OperatorOverloading a(1,1);
+    OperatorOverloading b(1,1);
+    a.print();
+    b.print();
+    a += b;
+    a.print();
+    cout << a << " " << b << endl;
+}
+
+// this keyword in c++
+// it's only accessible inside a class method.
+// the "this" keyword refers to the self object for which the method is called.
+// 
+
+class ThisKeyword{
+public :
+    ThisKeyword(){};
+    int getX() { return this->x;}
+    ThisKeyword add (const ThisKeyword & other) {
+        this->x + other.x; // this is being used to access the data members of current class.
+        return *this;
+    }
+private :
+    int x ;
+};
+
+
+// Smart pointers in c++
+
+// Smart pointers in c++ are tools to prevent bugs related to memory leaks and provides automatic deallocation of objects allocated on the
+// heap storage.
+// Smart pointers should be used everywhere they can be used in modern c++
+// Smart pointers are scope based pointers and they destruct the underlying object (object pointed to) when they go out of scope.
+// They are available in <memory> class.
+
+class SmartPointers{
+public :
+    SmartPointers() {
+        cout<< "CREATING object for smart pointer demonstration"<<endl;
+    }
+    ~SmartPointers() {
+        cout<< "DELETING object for smart pointer demonstration"<<endl;
+    }
+
+};
+
+void smartPointers() {
+
+    // unique pointers -
+    // unique pointers can not be copied and "=" operator is deleted for unique pointers.
+    // 
+    {
+        unique_ptr<SmartPointers> p_log = make_unique<SmartPointers>(); // Preffered way of making unique pointers, make_unique handles exceptions generated
+        {
+            // by the Log constructor if any, make_unique returns a unique pointer
+            // unique_ptr<Log> p_log2 = new Log(); // does not work since the 
+            unique_ptr<SmartPointers> p_log3(new SmartPointers()); // In case Log class had private constructor better to use this, however 
+        }
+    }
+    // both p_log and p_log2 wil get out of scope and SmartPointers objects will get deleted.
+
+    // Shared pointers -
+    // Shared pointers are similar to unique pointers in the sense that they delete the objected pointer by them
+    // when they go out of scope.
+    // Shared pointers can be copied and copying a shared pointer increases their reference count by 1.
+    // The object pointed by shared pointers is destroyed when all the shared pointers pointing to that object
+    // gets out of scope ie reference count becomes 0.
+
+    // https://stackoverflow.com/questions/20895648/difference-in-make-shared-and-normal-shared-ptr-in-c
+    // https://www.reddit.com/r/cpp_questions/comments/q647ms/how_to_copy_and_reference_a_shared_ptr/
+    
+    
+    {
+        shared_ptr<SmartPointers> sp_log; 
+        {
+            shared_ptr<SmartPointers> sp_log2 = make_shared<SmartPointers>(); // Preffered way of making shared pointers.
+            // Make_shared handles exceptions generated
+            // Allocates memory only once for object initialized and control block of shared pointer
+            // Which stores the reference count etc.
+
+            // Shared_ptr<SmartPointers> sp_log2(new SmartPointers()) // another way.
+            // This way does not handle exceptions in object constructor and memory allocation.
+            // also does 2 allocations 1. for the object 2. for the control block of shared ptr.
+            // This is slightly slower than using make_shared.
+            sp_log = sp_log2;
+            cout << " Reference count of shared pointer = "<< sp_log2.use_count()<<endl;
+            shared_ptr<SmartPointers> sp_log3(sp_log);
+            cout << " Reference count of shared pointer = "<< sp_log2.use_count()<<endl;
+        }
+        cout << " Reference count of shared pointer = "<< sp_log.use_count()<<endl;
+
+        // Weak pointers - 
+        // A weak pointer is similar to shared pointer with 1 key difference it does not increase the 
+        // ref count of a shared pointer.
+        // Weak pointer can be used when we don't want the pointer to affect the object lifespan.
+        // weak pointer has a function "expired()" to check if the underlying objec is alive or not.
+        // also to use a share pointer "lock()" is needed which returns a shared pointer object if the weak
+        // pointer is not expired.
+
+        // Since there there's only one allocation, the pointee's memory cannot be deallocated until the 
+        // control block is no longer in use. A weak_ptr can keep the control block alive indefinitely to
+        // determine whether the shared pointer is alive or not.
+
+        weak_ptr<SmartPointers> wp_log = sp_log;
+        cout << " Reference count of shared pointer after weak pointer assignment = "<< sp_log.use_count()<<endl;
+    } // the SmartPointers object will get deleted once the control exits this scope.
+}
+
+
+// copying and copy constructor in c++
+// C++ provides a default shallow copy constructor and assignment operator.
+// the shalow copy constructor and assignment operator works fine if non of the members are pointers
+// and they do not require explicit memory allocation.
+
+// However if the class has pointers then the shallow copy only copies the
+// memory address of the pointers ie it only copies the pointers and not the object pointed by pointer.
+
+// Therefore an explicit copy constructor and assignment operator is required with explicit memory allocations 
+// if the class has pointers.
+class CopyHelper{
+public :
+    CopyHelper(int d) : m_data(d) {}
+    int m_data;
+};
+
+class Copy {
+public:
+    Copy(int a) : m_a(a), m_ch(new CopyHelper(a)) {};
+    // explicit copy constructor doing a deep copy of the m_ch pointer.
+    Copy(const Copy& other) {
+        this->m_a = other.m_a;
+        m_ch = new CopyHelper(*other.m_ch);
+    }
+    int getData () {
+        return m_ch->m_data;
+    }
+    void modifyData (int newData) {
+        m_ch->m_data = newData;
+    }
+
+private:
+    int m_a;
+    CopyHelper* m_ch;
+};
+
+void copyInCpp() {
+    Copy obj(10);
+    Copy objCopy = obj; 
+    // by default shallow copy will happen and the m_ch of both the objects will point to the 
+    // same memory location, try commenting out the copy constructor to recreate it.
+    cout << " obj data - " << obj.getData()<< " objCopy Data - "<< objCopy.getData() <<endl;
+    obj.modifyData(5); // modifying data in m_ch of 1 object will change other object as well.
+    cout << " Modified the obj data to 5 "<<endl;
+    cout << " obj data - " << obj.getData()<< " objCopy Data - "<< objCopy.getData() <<endl;
+}
+
+// arrow -> operator in c++
+// -> operator is used to dereference a pointer and then access members of that class.
+// -> can be overloaded to return a pointer type.
+class Arrow {
+public :
+    void printArrow() {
+        cout <<"Printing Arrow" << endl;
+    }
+};
+
+// ScopedPtr implementation like unique_ptr but only for Arrow class.
+class ScopedPtr {
+public :
+    ScopedPtr(Arrow* a) : m_arrow(a) {}
+    ~ScopedPtr() {
+        delete m_arrow;
+    }
+    Arrow* getArrow() {
+        return m_arrow;
+    }
+    Arrow* operator ->() { // -> must return a pointer type
+        return getArrow();
+    }
+    
+private :
+    Arrow* m_arrow;
+};
+
+
+void arrowInCpp() {
+    ScopedPtr sp_arrow(new Arrow());
+    // how to access the Arrow object from scoped pointer?
+    // we can write a function which returns the Arrow object or pointer.
+    sp_arrow.getArrow()->printArrow();
+    // or overload the "->" operator to return the m_arrow POINTER. ( it needs to return pointer and not
+    // the dereferenced object)
+    sp_arrow->printArrow();
+}
+
+
+
+// Vectors in c++
+// vectors are dynamic arrays which resize themselves if their capacity is exaushted.
+// when resizing a new vector of bigger size is created and all the elements of the old vector are copied to it.
+// this happens everytime the capacity is exhauted theirfore it takes a toll on performance.
+// vectors do need a valid deep copy "copy constructor" might result in errors if used with classes with pointers
+// but no copy constructors.
+
+class VectorDemo{
+public :
+    VectorDemo(int a, int b ) : m_a(a), m_b(b) {}
+    // copy constructor
+    VectorDemo(const VectorDemo& other) : m_a(other.m_a), m_b(other.m_b) {
+        cout<< "VectorDemo is Copied"<<endl;    
+    }
+    int m_a, m_b;
+};
+
+void vectorInCpp() {
+    vector<VectorDemo> vec; //  vec(3) will not work since it creates 3 objects with default constructor
+    // but in VectorDemo default constructor is absent.
+    vec.reserve(3); // This will reserver space in the vector for 3 VectorDemo instances.
+    vec.push_back(VectorDemo(1,2)); // first the VectorDemo object will be created here in main then copied to
+    // the actualy memory allocated to the vector-  copy constructor will be called.
+    vec.push_back({3,4}); // similar to above line will first create obj here then copy to vector ie copy
+    // constructor will be called.
+    vec.emplace_back(5,6); // VectorDemo object will directly be created on the memory allocated to the vector.
+    // these arguments are called variadic arguments and they are forwarded to the constructor of VectorDemo 
+    // class by emplace_back and then the object is created in the vector itself, emplace is sort of in-place
+    for (auto& vd : vec) {
+        cout << " a value : "<<vd.m_a << " b value : "<<vd.m_b<<endl;
+    }
+}
+
+
+// tuples in c++
+// tuples are  introduced in c++ 11
+// tuples are fixed sized collection of hetrogeneous values it's an extension of what std::pair does.
+// a tuple can have data of different types.
+// tuple is in <tuple> class.
+void tuplesInCpp() {
+    // declaring tuple
+    tuple<int, int, string> t1;
+    // declaring and initializing a tuple 
+    tuple<int, int, float> t2(1, 1, 1.0f);
+    // another way to initialize a tuple.
+    t1 = make_tuple(1, 2, "Hi");
+    // another way to initialize a tuple.
+    tuple<int ,int> t3 = {3, 3};
+
+    // Reading data from a tuple.
+
+    // using get() method from <tuple.
+    int a, b; // declare variables to store data which will be read from tuple.
+    string c;
+    a = get<0>(t1);
+    b = get<1>(t1);
+    c = get<2>(t1);
+    cout << "Data read from tuple - "<< a << " "<< b <<" "<< c << endl;
+
+    // another way to read data from tuple is by using tie() function which reads data from a tuple
+    // and stores it in varibles which it takes as arguments.
+    int d ,e;
+    float f;
+    tie(d, e, f) = t2;
+
+    cout << "Data read from tuple - "<< d << " "<< e <<" "<< f << endl;
+
+    tuple<int,int> t4(4, 5);
+    tuple<int,int> t5(6, 7);
+    cout << "Data read from tuple - "<< get<0>(t4) << " "<< get<1>(t4) << endl;
+    cout << "Data read from tuple - "<< get<0>(t5) << " "<< get<1>(t5) << endl;
+    // swapping the values of 2 tuples
+    cout<<" Swapping 2 tuples " <<endl;
+    t4.swap(t5);
+    cout << "Data read from tuple - "<< get<0>(t4) << " "<< get<1>(t4) << endl;
+    cout << "Data read from tuple - "<< get<0>(t5) << " "<< get<1>(t5) << endl;
+
+    // concatnating 2 tuples by using tuple_cat(), it returns a third tuple with new type 
+    tuple <int, int, int, int> t6 = tuple_cat(t4, t5);
+
+}
+
+
+
+// how to deal with multiple return values in c++
+// there are a few ways to deal with return values from a function which includes using containers like
+// vector ( if all the return variables are of same type) ,pair if there are 2 varible (could be of diff type)
+// or passing varibles by reference and setting them in called function.
+// or defining struct and using those to return variables
+
+// Passing varibles by reference 
+void multipleReturnValuesHelperPassByRef( int &a, string &b) {
+    a = 10;
+    b = "Hello";
+}
+
+// returning a pair LIMITED to 2 values.
+pair<int, string> multipleReturnValuesHelperByUsingPair() {
+    return make_pair(10, "Hello");
+}
+
+// declaring a new struct and using it to return values.
+struct IntString {
+    int a;
+    string b;
+    float c;
+};
+
+IntString multipleReturnValuesHelperUsingStruct() {
+    return {10, "Hello", 1.0f}; // implicit conversion and assignment.
+}
+
+// by using tuples c++ 11+
+tuple <int, string, float> multipleReturnValuesHelperUsingTuple() {
+    return {10, "Hello", 1.0f}; // implicit conversion to a typle
+}
+void multipleReturnValues() {
+
+    // pass by reference 
+    int a ;
+    string b;
+    multipleReturnValuesHelperPassByRef(a, b);
+    cout << "Value of A -" <<a<< " Value of B - "<< b<<endl;
+    // using pair
+    auto p = multipleReturnValuesHelperByUsingPair();
+    cout << "Value of A -" <<p.first<< " Value of B - "<< p.second<<endl;
+    //using helper struct 
+    IntString is = multipleReturnValuesHelperUsingStruct();
+    cout << "Value of A -" <<is.a<< " Value of B - "<< is.b<< " Value of C - "<< is.c<<endl;
+    // using tuple.
+    tuple <int, string, float> t = multipleReturnValuesHelperUsingTuple();
+    cout << "Value of A -" <<get<0>(t)<< " Value of B - "<<get<1>(t)<< " Value of C - "<< get<2>(t)<<endl;
+    // ** Prefered way should be : 1. pass by reference (if no of args <= 2) 
+    // 2. Using custom struct ( if the struct can be reused in code )
+    // 3. tuple - a tuple can also be used to return multiple values.
+}
+
+// structured bindings in c++ 
+// structured bindings is a way to unpack multiple variables at once.
+// taking above multiple return values fuction for example 
+
+void structuredBindingsInCpp() {
+    // while using structured bindings the no of variables should be same as the unpacking container.
+    cout<<"Structured bindings " <<endl;
+    //using structured bindings to unpack a structure 
+    auto [a, b, c] = multipleReturnValuesHelperUsingStruct();
+    cout << "Value of A -" <<a<< " Value of B - "<< b<< " Value of B - "<<c<<endl;
+
+    // using structured bindings to unpack a tuple.
+    auto [ d, e, f] = multipleReturnValuesHelperUsingTuple();
+    cout << "Value of D -" <<d<< " Value of E - "<< e<< " Value of F - "<<f<<endl;
+    
+    pair <int, string> p{5, "FUCK"};
+    auto [ g, h ] = p;
+    cout<< "Value of G - "<< g<< " Value of H - "<<h<<endl;
+}
+
+
+
+
+
+
 int main() {
     
     variables();
     pointers();
     references();
 
-    // class 
+    // class in c++;
     Player p;
 
+    // structs in c++
+    PlayerStruct ps { 10, 9, 8}; // struct memebers can be initialized with curly braces, 
+    // it;s the optimal syntax, also see there's no 3 parameter constructor in PlayerStruct still the 
+    // initialization works.
+    PlayerStruct ps1 = {7, 6 , 5}; // this also works fine;
+    PlayerStruct ps2 = {4, 3 ,2}; // this also works
     // inheritance 
     Inheritance inh(99);
 
@@ -455,13 +994,44 @@ int main() {
     // string 
     strings();
 
+    // string literal
+    stringLiteral();
+
+    // const in c++
+    constInCpp();
+
+    // initializer list in c++
+    InitHelper ih(5, 5);
+    InitList il(5, ih);
 
 
+    // operator overloading 
+    operatorOverloadingInCpp();
 
+    // smart pointers in c++
+    smartPointers();
 
-    // Static variable outside a class or function
-    // Static variable outside a class or method is 
+    // copy constructor in c++
+    copyInCpp();
 
+    // -> in c++ arrow in c++
+    arrowInCpp();
+
+    // vectors in c++
+    vectorInCpp();
+
+    // Static variable in a function;
+    function_f();
+    function_f();
+
+    // tuples in c++
+    tuplesInCpp();
+
+    // how to deal with multiple return values in c++
+    multipleReturnValues();
+
+    // structured bindings in c++
+    structuredBindingsInCpp();
     
     // main() function automatically returns 0, other functions with return type must return.
 }
