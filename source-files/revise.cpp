@@ -952,8 +952,154 @@ void structuredBindingsInCpp() {
 }
 
 
+// templates in c++ 
+// templates in c++ are a way to create generic class definitions for differnt types.
+// templated classes or functions are only created by the compiler for a spcific type if they are used
+// any errors in the templated functions/classes are only caught during compilation if these are used
+// somewhere in code.
+// templates are very powerful tool to create generic code
+// template are blueprints for functions and classes
+// STL is created with the use of templates
+template<typename T>
+T add(T first , T second) {
+    return first + second;
+}
+
+template<typename T>
+void print(T a) {
+    cout<< "Printing from templated function - " << a << endl; // This will work only if the cout 
+    // function is overloaded for T type.
+}
+
+template<typename T>
+void syntaxError(T a) {
+    //ccccouttt << a << endl; // clearly a syntax error, but some compiler won't notify it since it's not used
+    // clang does raise an error though
+}
 
 
+// dynamic (run time size allocation) is not supported 
+class Array {
+private :
+    int m_size;
+    // int  m_array[m_size]; // ERROR fields must have a constant size: 'variable length array in structure' 
+    // extension will never be supported
+    // defined an array variable with size that is not compile time constant.
+public :
+    int getSize() const {
+        return m_size;
+    }
+};
+
+// template<typename T1, class T2> // instead of typename class can also be used.
+
+template<int size, typename T> 
+class ArrayFixed {
+private :
+    T m_array[size];
+public :
+    int getSize() const {
+        return size;
+    }
+};
+
+void templates() {
+    // using add for strings
+    int a = 10, b = 5;
+    cout <<" Templated add fuction for integers - " <<add <int>(a, b) << endl;
+    string c = "Hi,";
+    string d = " How are you ?";
+    cout <<" Templated add fuction for strings - " <<add <string>(c, d) << endl;
+    print(a); // we don't always need to give the type in angular braces.
+    print<string>("Hello");
+    print(5.5f);
+
+    // int n = 10; int array[n]; // it's not allowed at compile time since the value of n can change.
+    // array of fixed size at compile time
+    ArrayFixed <5, int> arrayOf5;
+    cout << "the size of the fixed array is -  "<< arrayOf5.getSize()<<endl;
+}
+
+
+// stack and heap memory allocation in c++
+// https://stackoverflow.com/questions/79923/what-and-where-are-the-stack-and-heap
+// Stack allocatoion - 
+// In stack allocation the memory is allocated in the way a stack works, there's a stack with a top
+// pointer and whenever a piece of memory of size N is required the stack grows by size N and then returns the
+// new top of the stack, then the program can use this allocated memory.
+
+// Stack allocation is much faster it has very less (possibly 1) cpu instructions just to grow the stack 
+// and in case of freeing up the memory also it's fast the stack is shrunk by the size of deleted element.
+// the parameters passed to functions and local variables are also stored on the stack memory and
+
+// When the function returns are the stack also shrinks.
+// Very large objects must not be allocated on the stack.
+// Implemented with an actual stack data structure.
+
+// Heap memory allocation - 
+// Heap memory allocation is much slower than compared to stack allocation memory, due to the bookkeeping
+// involved.
+
+// In C++ when something is allocated on heap memory by using the "new" keyword it must be freed explicitly 
+// by the user with "delete" keyword when it's not needed anymore else the memory will be leaked and
+// won't be available for use till the program terminates.
+
+// Heap memory allocation involves finding the size of memory required to be allocated and if not available ask
+// the OS for the memory which is much slower, then keep track of the allocated memory.
+//
+void stackAndHeapAllocation() {
+
+    int a = 10; // stack allocation.
+    int *b = new int(5); // heap allocation.
+    
+}
+
+
+// macros in c++
+// Macros in cpp are basically replacing text (code statements, text substitution) in code in the pre-processing phase.
+// The pre-processor changes the actual code before it goes to the compiler and it replaces the text (macros)
+// with the actual values of the macros.
+
+// Macro has scope of current compilation unit, and if it's included in header file then it will be defined 
+// in call cpp files where that header file is included.
+
+// Macros must be used carefully as to not write confusing code
+#define open_curly_bracket {
+#define clode_curly_bracker }
+
+void macros() {
+    if (true) open_curly_bracket
+        cout << "Terrible example of writing macros" << endl;
+        cout << "Never write code like this "<< endl;
+    clode_curly_bracker
+    // macros can have arguments as well which makes them function like
+    #define LOG(x) cout << "Logged from a macro " << x << endl;
+    LOG("hello");
+    // macro which takes 2 arguments.
+    #define ADD(a, b) a + b
+    cout <<"Adding 2 numbers from macro " << ADD(10, 10) << endl;
+
+    // Multiline macros
+    // a macro can expand to multiple lines with "\<enter>" the last character must be "\"
+    // immediately followed by an enter ( there must not be a space after \)
+    // "\" works like escape character for the next character, it can be used to escape spaces as well.
+    #define RECTANGLE_STARS(l, b, pattern)\
+    {\
+        for (int i = 0; i < l; i++) {\
+            for (int j = 0; j < b; j++) {\
+                cout<<pattern;\
+            }\
+            cout<<endl;\
+    }\
+    }\
+
+    cout<< "Printing retangle with \"*\" for 4 by 20 "<<endl;
+    RECTANGLE_STARS(4, 20, '*');
+
+    // macros to macros nested macros.
+    #define ADD_INTEGERS(a, b) ADD(a, b)
+    cout <<"Adding 2 Integers from nested macro " << ADD_INTEGERS(20, 10) << endl; 
+ }
 
 
 int main() {
@@ -1032,6 +1178,15 @@ int main() {
 
     // structured bindings in c++
     structuredBindingsInCpp();
+
+    // templated in c++
+    templates();
+
+    // stack and heap memory allocation in c++
+    stackAndHeapAllocation();
+
+    // macros in c++
+    macros();
     
     // main() function automatically returns 0, other functions with return type must return.
 }
