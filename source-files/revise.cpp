@@ -4,6 +4,8 @@
 #include<memory>
 #include<vector>
 #include<tuple>
+#include<unordered_map>
+#include<array>
 #include "../header-files/revise.h" // user "" quotes anytime else, for relative file location to current file.
 
 
@@ -716,9 +718,12 @@ void smartPointers() {
 
 // Therefore an explicit copy constructor and assignment operator is required with explicit memory allocations 
 // if the class has pointers.
-class CopyHelper{
+class CopyHelper {
 public :
     CopyHelper(int d) : m_data(d) {}
+    CopyHelper(const CopyHelper& other) {
+        m_data = other.m_data;
+    }
     int m_data;
 };
 
@@ -737,10 +742,21 @@ public:
         m_ch->m_data = newData;
     }
 
+
+    Copy(const Copy& other) {
+        m_a = other.m_a;
+        m_ch = new CopyHelper(*(other.m_ch));
+    }
+
 private:
     int m_a;
     CopyHelper* m_ch;
 };
+
+
+
+
+
 
 void copyInCpp() {
     Copy obj(10);
@@ -1102,6 +1118,59 @@ void macros() {
  }
 
 
+// auto in c++
+// auto keyword basically gets the type automatically.
+
+int& returnIntByRef() {
+    int* a = new int(101);
+    cout<<" returning address (by ref) "<< a<<endl;
+    return *a;
+}
+
+int* returnIntByPtr() {
+    int* a = new int(201);\
+    cout<<" returning address (pointer) "<< a<<endl;
+    return a;
+}
+
+void autoInCpp() {
+    vector<unordered_map<string, int>> rollNoToSubjectMarksMap;
+    vector<unordered_map<string, int>>::iterator itr = rollNoToSubjectMarksMap.begin();
+    // alternatively instead of writing all that code directly use auto
+    // using auto like this does not create any confusion but makes the code much more cleaner.
+    auto itr1 = rollNoToSubjectMarksMap.begin();
+    // auto only takes the type of the variable even if it is returning by reference 
+
+    auto intByValue = returnIntByRef(); // by default auto will create a copy of the returned value
+    // even if the functions returned by raference.
+    auto& intByRef = returnIntByRef(); // Will need to use "&" to get the actual reference.
+    cout <<"auto captured returned by value "<<intByValue <<" address - "<<&intByValue 
+        <<" and by reference  "<< intByRef <<" address - "<<&intByRef <<endl;
+    cout <<"changed the value to 500, only 1 will be changed, if they were the same memory address "
+        "both should have gotten changed"<<endl;
+    intByRef = 500;
+    cout <<"auto captured returned by value "<<intByValue <<" and by reference  "<< intByRef <<endl;
+
+    auto intByPtr = returnIntByPtr(); // auto can directly capture the pointers and make the varible as ptr type
+    cout <<"auto can directly capture pointers if a pointer is returned "<<intByPtr<<" val " <<*intByPtr<<endl;
+
+    // it is not recommended to use auto in case of capturing a valued returned by a function since
+    // it maked the code ambigous because on reading the code can't understand the returned type.
+
+    // auto should mostly be used where the typename is apparent or the typename is very long and 
+    // you don't want to use typedef or using.
+
+    // use auto where it won't cause issues, not recommended to use in case of api calls.
+}
+
+void staticArraysInCpp() {
+    
+}
+
+void functionPointerInCpp() {
+    
+}
+
 int main() {
     
     variables();
@@ -1187,6 +1256,9 @@ int main() {
 
     // macros in c++
     macros();
+
+    // auto in c++
+    autoInCpp();
     
     // main() function automatically returns 0, other functions with return type must return.
 }
